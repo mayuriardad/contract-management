@@ -2,15 +2,29 @@ import { Request, Response } from "express";
 import { AppDataSource } from "../data-source";
 import { WorkerContractMapping } from "../entities/WorkerContractMapping";
 import { ServiceWorker } from "../entities/ServiceWorker";
+import { In } from "typeorm";
 
 export const onboardWorker = async (req: Request, res: Response) => {
   const { contractId, employeeNumber } = req.body;
+  const loggedInUser = res.locals.user; // This is the user fetched in the middleware
 
-  // const loggedInUser = req.user; // This is the user fetched in the middleware
+  if (!loggedInUser || ["worker"].includes(loggedInUser.role)) {
+    return res.status(403).json({ message: "Permission denied" });
+  }
+  const mappingAlreadyExists = await AppDataSource.getRepository(
+    WorkerContractMapping
+  ).find({
+    where: {
+      contractId: Number(contractId),
+      employeeNumber: Number(employeeNumber),
+    },
+  });
 
-  // if (!loggedInUser || ["worker"].includes(loggedInUser.role)) {
-  //   return res.status(403).json({ message: "Permission denied" });
-  // }
+  if (mappingAlreadyExists) {
+    return res
+      .status(409)
+      .json({ message: "Worker already assigned to project" });
+  }
 
   try {
     const workerRepository = AppDataSource.getRepository(ServiceWorker);
@@ -24,13 +38,14 @@ export const onboardWorker = async (req: Request, res: Response) => {
     const workerContractMappingRepository = AppDataSource.getRepository(
       WorkerContractMapping
     );
+
     const newMapping = workerContractMappingRepository.create({
+      employeeNumber,
       contractId,
-      worker,
     });
 
     await workerContractMappingRepository.save(newMapping);
-    res.status(201).json(newMapping);
+    res.status(201).json(worker);
   } catch (error) {
     res.status(500).json({ message: "Internal server error", error });
   }
@@ -55,8 +70,8 @@ export const offboardWorker = async (req: Request, res: Response) => {
       WorkerContractMapping
     );
     const existingMapping = await workerContractMappingRepository.findOneBy({
+      employeeNumber,
       contractId,
-      worker,
     });
 
     if (!existingMapping) {
@@ -77,14 +92,21 @@ export const getWorkersForContract = async (req: Request, res: Response) => {
       WorkerContractMapping
     ).find({
       where: { contractId: Number(contractId) },
-      relations: ["worker"],
     });
 
     if (workerContractMappings.length === 0) {
       return res.json([]);
     }
 
-    const workers = workerContractMappings.map((mapping) => mapping.worker);
+    const workerIds = workerContractMappings.map(
+      (mapping) => mapping.employeeNumber
+    );
+
+    const workers = await AppDataSource.getRepository(ServiceWorker).find({
+      where: {
+        employeeNumber: In(workerIds),
+      },
+    });
 
     res.json(workers);
   } catch (error) {
@@ -100,15 +122,17 @@ export const getContractsForWorker = async (req: Request, res: Response) => {
       WorkerContractMapping
     );
     const mappings = await workerContractMappingRepository.find({
-      where: { worker: { employeeNumber: Number(employeeNumber) } },
-      relations: ["contract"],
+      where: { employeeNumber: Number(employeeNumber) },
     });
 
     if (mappings.length === 0) {
       return res.status(200).json([]);
     }
 
-    const contracts = mappings.map((mapping) => mapping.contract);
+    const contractIds = mappings.map((mapping) => mapping.contractId);
+    const contracts = await workerContractMappingRepository.find({
+      where: { contractId: In(contractIds) },
+    });
     res.json(contracts);
   } catch (error) {
     res.status(500).json({ message: "Internal server error", error });

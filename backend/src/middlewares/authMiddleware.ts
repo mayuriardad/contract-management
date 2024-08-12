@@ -7,7 +7,9 @@ export const fetchUserMiddleware = async (
   res: Response,
   next: NextFunction
 ) => {
-  const employeeNumber = req.headers["employee-id"];
+  console.log("in middle ware", req.headers);
+  const employeeNumber = req.headers["x-employee-id"];
+  console.log(employeeNumber, "in middle ware found");
 
   if (!employeeNumber) {
     return res.status(401).json({ message: "Please login and try again" });
@@ -23,8 +25,7 @@ export const fetchUserMiddleware = async (
       return res.status(403).json({ message: "Permission denied" });
     }
 
-    // Attach user details to request object
-    req.user = worker;
+    res.locals.user = worker;
 
     next();
   } catch (error) {

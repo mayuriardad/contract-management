@@ -5,7 +5,6 @@ import {
   getWorkersForContract,
   getContractsForWorker,
 } from "../controllers/WorkerContractMappingController";
-import { fetchUserMiddleware } from "../middlewares/authMiddleware";
 
 const router = Router();
 

@@ -5,13 +5,24 @@ import cors from "cors";
 import workerRoutes from "./routes/workerRoutes";
 import contractRoutes from "./routes/contractRoutes";
 import workerContractMappingRoutes from "./routes/mappingRoutes";
-// import "./express";
+import { fetchUserMiddleware } from "./middlewares/authMiddleware";
 
 const app = express();
 const port = 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(function (req, res, next) {
+  const workerPattern = /^\/workers\/\d+$/;
+  if (
+    workerPattern.test(req.originalUrl) ||
+    ["/workers/login"].includes(req.originalUrl)
+  ) {
+    return next();
+  } else {
+    return fetchUserMiddleware(req, res, next);
+  }
+});
 
 app.use("/workers", workerRoutes);
 app.use("/contracts", contractRoutes);

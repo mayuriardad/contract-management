@@ -7,6 +7,19 @@ export const createContract = async (req: Request, res: Response) => {
   const { name, status, ownerId, createdAt, updatedAt } = req.body;
 
   try {
+    // check if id is passed is owner id
+    const workerTofind = await AppDataSource.getRepository(
+      ServiceWorker
+    ).findOneBy({
+      employeeNumber: parseInt(ownerId),
+      role: "owner",
+    });
+
+    if (!workerTofind) {
+      return res.status(400).json({
+        message: "Worker cannot be assigned as owner of a contract",
+      });
+    }
     // Check if ownerId is assigned to another active contract
     const activeContracts = await AppDataSource.getRepository(ServiceContract)
       .createQueryBuilder("contract")

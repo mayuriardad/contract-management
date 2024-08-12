@@ -1,29 +1,30 @@
-import { Entity, PrimaryColumn, Column, ManyToOne } from "typeorm";
+import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn } from "typeorm";
 import { ServiceWorker } from "./ServiceWorker";
 import { ServiceContract } from "./ServiceContract";
 
 @Entity()
 export class WorkerContractMapping {
   @PrimaryColumn()
-  employeeNumber: number;
+  employeeNumber: number; // Primary column, no default
 
   @PrimaryColumn()
-  contractId: number;
+  contractId: number; // Primary column, no default
 
-  @Column({ type: "text", default: () => "CURRENT_TIMESTAMP" }) // Use text type for dates in SQLite
-  createdAt: Date;
+  @Column({ default: () => "CURRENT_TIMESTAMP" })
+  createdAt: Date = new Date(); // Initialize with current date
 
   @Column({
-    type: "text",
     default: () => "CURRENT_TIMESTAMP",
     onUpdate: "CURRENT_TIMESTAMP",
-  }) // Use text type for dates in SQLite
-  updatedAt: Date;
+  })
+  updatedAt: Date = new Date(); // Initialize with current date
 
   @ManyToOne(() => ServiceWorker, (worker) => worker.contractMappings)
+  @JoinColumn({ name: "employeeNumber" })
   worker: ServiceWorker;
 
   @ManyToOne(() => ServiceContract, (contract) => contract.workerMappings)
+  @JoinColumn({ name: "contractId" })
   contract: ServiceContract;
 
   constructor(
