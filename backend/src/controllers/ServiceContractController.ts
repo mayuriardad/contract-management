@@ -6,6 +6,12 @@ import { ServiceWorker } from "../entities/ServiceWorker";
 export const createContract = async (req: Request, res: Response) => {
   const { name, status, ownerId, createdAt, updatedAt } = req.body;
 
+  const loggedInUser = res.locals.user; // This is the user fetched in the middleware
+
+  if (!loggedInUser || ["worker", "owner"].includes(loggedInUser.role)) {
+    return res.status(403).json({ message: "Permission denied" });
+  }
+
   try {
     // check if id is passed is owner id
     const workerTofind = await AppDataSource.getRepository(
@@ -50,17 +56,29 @@ export const createContract = async (req: Request, res: Response) => {
       contract: newContract,
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to create contract", error });
+    console.log(error);
+    res.status(500).json({ message: "Something went wrong, please try again" });
   }
 };
 
 export const getContracts = async (req: Request, res: Response) => {
+  const loggedInUser = res.locals.user; // This is the user fetched in the middleware
+
+  if (!loggedInUser || ["worker"].includes(loggedInUser.role)) {
+    return res.status(403).json({ message: "Permission denied" });
+  }
+
   const contractRepository = AppDataSource.getRepository(ServiceContract);
   const contracts = await contractRepository.find();
   res.json(contracts);
 };
 
 export const getContractById = async (req: Request, res: Response) => {
+  const loggedInUser = res.locals.user; // This is the user fetched in the middleware
+  if (!loggedInUser || ["worker", "owner"].includes(loggedInUser.role)) {
+    return res.status(403).json({ message: "Permission denied" });
+  }
+
   const contractRepository = AppDataSource.getRepository(ServiceContract);
   const contract = await contractRepository.findOne({
     where: { contractId: Number(req.params.id) },
@@ -73,6 +91,12 @@ export const getContractById = async (req: Request, res: Response) => {
 };
 
 export const updateContract = async (req: Request, res: Response) => {
+  const loggedInUser = res.locals.user; // This is the user fetched in the middleware
+
+  if (!loggedInUser || ["worker", "owner"].includes(loggedInUser.role)) {
+    return res.status(403).json({ message: "Permission denied" });
+  }
+
   const contractRepository = AppDataSource.getRepository(ServiceContract);
   const contract = await contractRepository.findOne({
     where: { contractId: Number(req.params.id) },
@@ -87,6 +111,12 @@ export const updateContract = async (req: Request, res: Response) => {
 };
 
 export const deleteContract = async (req: Request, res: Response) => {
+  const loggedInUser = res.locals.user; // This is the user fetched in the middleware
+
+  if (!loggedInUser || ["worker", "owner"].includes(loggedInUser.role)) {
+    return res.status(403).json({ message: "Permission denied" });
+  }
+
   const contractRepository = AppDataSource.getRepository(ServiceContract);
   const result = await contractRepository.delete(req.params.id);
   if (result.affected) {

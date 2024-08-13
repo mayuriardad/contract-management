@@ -1,6 +1,18 @@
 import React, { useState } from "react";
-import { Button, TextField, Grid, Container, Typography, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
+import {
+  Button,
+  TextField,
+  Grid,
+  Container,
+  Typography,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+} from "@mui/material";
 import axios from "axios";
+import { useAlerts } from "../hooks/useAlerts";
+import { AlertComponent } from "../common/AlertComponent";
 
 const WorkerForm: React.FC = () => {
   const [firstName, setFirstName] = useState<string>("");
@@ -8,6 +20,7 @@ const WorkerForm: React.FC = () => {
   const [role, setRole] = useState<"owner" | "worker">("worker");
   const [startDate, setStartDate] = useState<string>("");
   const [employeeNumber, setEmployeeNumber] = useState<number>(0);
+  const { alertState, setAlertState, closeAlert } = useAlerts();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -19,16 +32,25 @@ const WorkerForm: React.FC = () => {
         startDate,
         employeeNumber,
       });
-      alert("Worker created successfully!");
+      setAlertState({
+        show: true,
+        message: "Worker created successfully!",
+        status: "success",
+      });
       // Clear the form after successful submission
       setFirstName("");
       setLastName("");
       setRole("worker");
       setStartDate("");
       setEmployeeNumber(0);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating worker:", error);
-      alert("Failed to create worker.");
+      const msg = error.response?.data?.message || "Error creating worker";
+      setAlertState({
+        show: true,
+        message: msg,
+        status: "error",
+      });
     }
   };
 
@@ -42,6 +64,7 @@ const WorkerForm: React.FC = () => {
           <Grid item xs={12} md={6}>
             <TextField
               label="First Name"
+              data-testid="worker-form-first-name"
               variant="outlined"
               fullWidth
               value={firstName}
@@ -52,6 +75,7 @@ const WorkerForm: React.FC = () => {
           <Grid item xs={12} md={6}>
             <TextField
               label="Last Name"
+              data-testid="worker-form-last-name"
               variant="outlined"
               fullWidth
               value={lastName}
@@ -66,6 +90,7 @@ const WorkerForm: React.FC = () => {
                 value={role}
                 onChange={(e) => setRole(e.target.value as "owner" | "worker")}
                 label="Role"
+                data-testid="worker-form-role"
                 required
               >
                 <MenuItem value="worker">Worker</MenuItem>
@@ -76,6 +101,7 @@ const WorkerForm: React.FC = () => {
           <Grid item xs={12} md={6}>
             <TextField
               label="Start Date"
+              data-testid="worker-form-start-date"
               type="date"
               variant="outlined"
               fullWidth
@@ -88,6 +114,7 @@ const WorkerForm: React.FC = () => {
           <Grid item xs={12}>
             <TextField
               label="Employee Number"
+              data-testid="worker-form-employee-number"
               type="number"
               variant="outlined"
               fullWidth
@@ -97,12 +124,18 @@ const WorkerForm: React.FC = () => {
             />
           </Grid>
           <Grid item xs={12}>
-            <Button type="submit" variant="contained" color="primary">
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              data-testid="create-worker-btn"
+            >
               Create Worker
             </Button>
           </Grid>
         </Grid>
       </form>
+      <AlertComponent {...alertState} closeAlert={closeAlert} />
     </Container>
   );
 };

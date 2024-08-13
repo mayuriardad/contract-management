@@ -10,10 +10,11 @@ import {
   Paper,
   Typography,
   CircularProgress,
-  Snackbar,
   Alert,
+  Link,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 interface Contract {
   contractId: number;
@@ -35,8 +36,9 @@ const ContractList: React.FC = () => {
       try {
         const response = await axios.get("http://localhost:3000/contracts");
         setContracts(response.data);
-      } catch (error) {
-        setError("Failed to fetch contracts");
+      } catch (error: any) {
+        const errorMessage = "Failed to fetch contracts";
+        setError(error.response?.data?.message || errorMessage);
       } finally {
         setLoading(false);
       }
@@ -75,13 +77,16 @@ const ContractList: React.FC = () => {
             ) : (
               contracts.map((contract) => (
                 <TableRow
+                  style={{ cursor: "pointer" }}
                   onClick={() =>
                     navigate(`/contracts/${contract.contractId}/workers`)
                   }
                   key={contract.contractId}
                 >
                   <TableCell>{contract.contractId}</TableCell>
-                  <TableCell>{contract.name}</TableCell>
+                  <TableCell>
+                    <Link>{contract.name}</Link>
+                  </TableCell>
                   <TableCell>{contract.status}</TableCell>
                   <TableCell>{contract.ownerId}</TableCell>
                   <TableCell>

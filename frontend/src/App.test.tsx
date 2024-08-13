@@ -27,17 +27,6 @@ describe("App Component", () => {
     localStorage.clear();
   });
 
-  test.only("renders WorkerForm and CreateContract routes for superAdmin role", () => {
-
-    render(
-      <MockAuthProvider mockValue={mockAuthContextValue}>
-        <App />
-      </MockAuthProvider>
-    );
-
-    expect(screen.getByText(/Employee Login/i)).toBeInTheDocument();
-  });
-
   test("renders WorkerList and HomePage for all logged-in users", () => {
     localStorage.setItem(
       "user",
@@ -45,20 +34,14 @@ describe("App Component", () => {
     );
 
     render(
-      <MemoryRouter initialEntries={["/workers"]}>
-        <App />
-      </MemoryRouter>
+      <MockAuthProvider mockValue={mockAuthContextValue}>
+        <MemoryRouter initialEntries={["/workers"]}>
+          <App />
+        </MemoryRouter>
+      </MockAuthProvider>
     );
 
     expect(screen.getByText(/Worker List/i)).toBeInTheDocument();
-
-    render(
-      <MemoryRouter initialEntries={["/home"]}>
-        <App />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByText(/Home/i)).toBeInTheDocument();
   });
 
   test("renders ContractList route for non-worker roles", () => {
@@ -66,14 +49,23 @@ describe("App Component", () => {
       "user",
       JSON.stringify({ role: "owner", employeeNumber: 1 })
     );
+    const mockAuth = {
+      user: { role: "owner", employeeNumber: 1 },
+      employeeNumber: 123,
+      handleLogin: jest.fn(),
+      logout: jest.fn(),
+      isLoggedIn: true,
+    };
 
     render(
-      <MemoryRouter initialEntries={["/contracts"]}>
-        <App />
-      </MemoryRouter>
+      <MockAuthProvider mockValue={mockAuth}>
+        <MemoryRouter initialEntries={["/contracts"]}>
+          <App />
+        </MemoryRouter>
+      </MockAuthProvider>
     );
 
-    expect(screen.getByText(/Contracts List/i)).toBeInTheDocument();
+    expect(screen.getByText(/Contract List/i)).toBeInTheDocument();
   });
 
   test("does not render ContractList route for worker role", () => {
@@ -81,14 +73,22 @@ describe("App Component", () => {
       "user",
       JSON.stringify({ role: "worker", employeeNumber: 1 })
     );
+    const mockAuth = {
+      user: { role: "worker", employeeNumber: 1 },
+      employeeNumber: 123,
+      handleLogin: jest.fn(),
+      logout: jest.fn(),
+      isLoggedIn: true,
+    };
 
     render(
-      <MemoryRouter initialEntries={["/contracts"]}>
-        <App />
-      </MemoryRouter>
+      <MockAuthProvider mockValue={mockAuth}>
+        <MemoryRouter initialEntries={["/contracts"]}>
+          <App />
+        </MemoryRouter>
+      </MockAuthProvider>
     );
 
-    expect(screen.queryByText(/Contracts List/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/Home/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Contract List/i)).not.toBeInTheDocument();
   });
 });

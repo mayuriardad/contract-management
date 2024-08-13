@@ -8,12 +8,13 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
+import { useAlerts } from "./hooks/useAlerts";
+import { AlertComponent } from "./common/AlertComponent";
 
 const OffboardWorkerForm: React.FC = () => {
   const [employeeNumber, setEmployeeNumber] = useState<number | "">("");
   const [contractId, setContractId] = useState<number | "">("");
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { alertState, setAlertState, closeAlert } = useAlerts();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -25,17 +26,20 @@ const OffboardWorkerForm: React.FC = () => {
           contractId,
         }
       );
-      setMessage("Worker offboarded successfully!");
+      setAlertState({
+        show: true,
+        message: "Worker offboarded successfully!",
+        status: "success",
+      });
       setEmployeeNumber("");
       setContractId("");
     } catch (error: any) {
-      setError(error.response?.data?.message || "Failed to offboard worker.");
+      setAlertState({
+        show: true,
+        message: error.response?.data?.message || "Failed to offboard worker.",
+        status: "error",
+      });
     }
-  };
-
-  const handleClose = () => {
-    setMessage(null);
-    setError(null);
   };
 
   return (
@@ -66,16 +70,7 @@ const OffboardWorkerForm: React.FC = () => {
           Offboard Worker
         </Button>
       </form>
-      <Snackbar open={!!message} autoHideDuration={6000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity="success">
-          {message}
-        </Alert>
-      </Snackbar>
-      <Snackbar open={!!error} autoHideDuration={6000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity="error">
-          {error}
-        </Alert>
-      </Snackbar>
+      <AlertComponent {...alertState} closeAlert={closeAlert} />
     </Container>
   );
 };

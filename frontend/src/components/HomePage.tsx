@@ -8,6 +8,13 @@ import {
   ListItemText,
   Container,
   Box,
+  TableCell,
+  TableHead,
+  TableContainer,
+  Paper,
+  Table,
+  TableRow,
+  TableBody,
 } from "@mui/material";
 import { useAuth } from "./contexts/AuthContext";
 
@@ -53,16 +60,30 @@ const HomePage: React.FC = () => {
           <Typography variant="h4" gutterBottom>
             Your Assigned Contracts
           </Typography>
-          <List>
-            {contracts.map((contract) => (
-              <ListItem key={contract.id}>
-                <ListItemText
-                  primary={contract.name}
-                  secondary={`Status: ${contract.status}`}
-                />
-              </ListItem>
-            ))}
-          </List>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Start Date</TableCell>
+                  <TableCell>End date</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {contracts.map(({ contract, createdAt }) => (
+                  <TableRow key={contract.id}>
+                    <TableCell>{contract.name}</TableCell>
+                    <TableCell>{contract.status}</TableCell>
+                    <TableCell>
+                      {new Date(createdAt).toDateString() || "N/A"}
+                    </TableCell>
+                    <TableCell>{contract.endDate || "N/A"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </>
       )}
     </Container>

@@ -3,6 +3,7 @@ import { AppDataSource } from "../data-source";
 import { WorkerContractMapping } from "../entities/WorkerContractMapping";
 import { ServiceWorker } from "../entities/ServiceWorker";
 import { In } from "typeorm";
+import { ServiceContract } from "../entities/ServiceContract";
 
 export const onboardWorker = async (req: Request, res: Response) => {
   const { contractId, employeeNumber } = req.body;
@@ -47,13 +48,18 @@ export const onboardWorker = async (req: Request, res: Response) => {
     await workerContractMappingRepository.save(newMapping);
     res.status(201).json(worker);
   } catch (error) {
-    res.status(500).json({ message: "Internal server error", error });
+    console.log(error);
+    res.status(500).json({ message: "Something went wrong, please try again" });
   }
 };
 
 export const offboardWorker = async (req: Request, res: Response) => {
   const { contractId, employeeNumber } = req.body;
+  const loggedInUser = res.locals.user; // This is the user fetched in the middleware
 
+  if (!loggedInUser || ["worker"].includes(loggedInUser.role)) {
+    return res.status(403).json({ message: "Permission denied" });
+  }
   try {
     const workerRepository = AppDataSource.getRepository(ServiceWorker);
     const worker = await workerRepository.findOneBy({ employeeNumber });
@@ -81,11 +87,17 @@ export const offboardWorker = async (req: Request, res: Response) => {
     await workerContractMappingRepository.remove(existingMapping);
     res.status(200).json({ message: "Worker offboarded successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Internal server error", error });
+    console.log(error);
+    res.status(500).json({ message: "Something went wrong, please try again" });
   }
 };
 
 export const getWorkersForContract = async (req: Request, res: Response) => {
+  const loggedInUser = res.locals.user; // This is the user fetched in the middleware
+
+  if (!loggedInUser || ["worker", "owner"].includes(loggedInUser.role)) {
+    return res.status(403).json({ message: "Permission denied" });
+  }
   const { contractId } = req.params;
   try {
     const workerContractMappings = await AppDataSource.getRepository(
@@ -110,7 +122,8 @@ export const getWorkersForContract = async (req: Request, res: Response) => {
 
     res.json(workers);
   } catch (error) {
-    res.status(500).json({ message: "Internal server error", error });
+    console.log(error);
+    res.status(500).json({ message: "Something went wrong, please try again" });
   }
 };
 
@@ -130,11 +143,20 @@ export const getContractsForWorker = async (req: Request, res: Response) => {
     }
 
     const contractIds = mappings.map((mapping) => mapping.contractId);
-    const contracts = await workerContractMappingRepository.find({
+    const contracts = await AppDataSource.getRepository(ServiceContract).find({
       where: { contractId: In(contractIds) },
     });
-    res.json(contracts);
+    const response = mappings.map((contractMap) => {
+      return {
+        ...contractMap,
+        contract: contracts.find(
+          (contract) => contract.contractId === contractMap.contractId
+        ),
+      };
+    });
+    res.json(response);
   } catch (error) {
-    res.status(500).json({ message: "Internal server error", error });
+    console.log(error);
+    res.status(500).json({ message: "Something went wrong, please try again" });
   }
 };

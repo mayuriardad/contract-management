@@ -13,6 +13,9 @@ import {
   TextField,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import { useAlerts } from "../hooks/useAlerts";
+import { AlertComponent } from "../common/AlertComponent";
+import OnboardWorkerForm from "../OnboardWorkerForm";
 
 interface Worker {
   employeeNumber: number;
@@ -23,14 +26,12 @@ interface Worker {
   endDate: string | null;
 }
 
-const ContractWorkers: React.FC = () => {
-  const { contractId } = useParams<{ contractId: string }>();
+const ContractWorkersList: React.FC = () => {
+  const { contractId = "" } = useParams<{ contractId: string }>();
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState<boolean>(false);
-  const [employeeId, setEmployeeId] = useState<number | "">(0);
-  const [submitting, setSubmitting] = useState<boolean>(false);
+  const { alertState, setAlertState, closeAlert } = useAlerts();
 
   useEffect(() => {
     const fetchWorkers = async () => {
@@ -39,8 +40,14 @@ const ContractWorkers: React.FC = () => {
           `http://localhost:3000/worker-contract-mapping/contracts/${contractId}/workers`
         );
         setWorkers(response.data);
-      } catch (err) {
-        setError("Failed to fetch workers");
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.message || "Failed to fetch workers";
+        setAlertState({
+          show: true,
+          message: errorMessage,
+          status: "error",
+        });
       } finally {
         setLoading(false);
       }
@@ -49,33 +56,6 @@ const ContractWorkers: React.FC = () => {
     fetchWorkers();
   }, [contractId]);
 
-  const handleOnboardWorker = async () => {
-    if (typeof employeeId === "number" && employeeId > 0) {
-      setSubmitting(true);
-      try {
-        await axios.post(
-          `http://localhost:3000/worker-contract-mapping/onboard`,
-          {
-            contractId,
-            employeeNumber: employeeId,
-          }
-        );
-        // Refresh the list of workers
-        const response = await axios.get(
-          `http://localhost:3000/worker-contract-mapping/contracts/${contractId}/workers`
-        );
-        setWorkers(response.data);
-        setEmployeeId(0);
-        setShowForm(false);
-        alert("Worker onboarded successfully!");
-      } catch (err) {
-        setError("Failed to onboard worker");
-      } finally {
-        setSubmitting(false);
-      }
-    }
-  };
-
   if (loading) {
     return (
       <div
@@ -83,14 +63,6 @@ const ContractWorkers: React.FC = () => {
       >
         <CircularProgress />
       </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <Typography color="error" variant="h6" align="center">
-        {error}
-      </Typography>
     );
   }
 
@@ -133,44 +105,14 @@ const ContractWorkers: React.FC = () => {
             Onboard Worker
           </Button>
         ) : (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-around",
-              alignItems: "center",
-            }}
-          >
-            <TextField
-              label="Employee ID"
-              type="number"
-              value={employeeId === 0 ? "" : employeeId}
-              onChange={(e) => setEmployeeId(Number(e.target.value))}
-              variant="outlined"
-              margin="normal"
-            />
-            <div>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleOnboardWorker}
-                disabled={submitting}
-                style={{ marginRight: 12 }}
-              >
-                {submitting ? "Submitting..." : "Submit"}
-              </Button>
-              <Button
-                variant="outlined"
-                color="secondary"
-                onClick={() => setShowForm(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
+          <OnboardWorkerForm contractId={contractId} />
         )}
       </Paper>
+
+      {/* Snackbar for displaying messages */}
+      <AlertComponent {...alertState} closeAlert={closeAlert} />
     </div>
   );
 };
 
-export default ContractWorkers;
+export default ContractWorkersList;

@@ -7,9 +7,7 @@ export const fetchUserMiddleware = async (
   res: Response,
   next: NextFunction
 ) => {
-  console.log("in middle ware", req.headers);
   const employeeNumber = req.headers["x-employee-id"];
-  console.log(employeeNumber, "in middle ware found");
 
   if (!employeeNumber) {
     return res.status(401).json({ message: "Please login and try again" });

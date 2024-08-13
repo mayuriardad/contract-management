@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import WorkerForm from "./components/WorkerForm";
+import WorkerForm from "./components/WorkerForm/WorkerForm";
 import WorkerList from "./components/WorkerList";
-import ContractList from "./components/contractList/ContractList";
-import CreateContract from "./components/CreateContract";
+import ContractList from "./components/ContractList/ContractList";
+import CreateContract from "./components/CreateContract/CreateContract";
 import Layout from "./components/Layout";
 import Login from "./components/LoginForm";
 import HomePage from "./components/HomePage";
 import { useAuth } from "./components/contexts/AuthContext";
-import ContractWorkers from "./components/ContractWorkers";
+import ContractWorkers from "./components/ContractWorkersList/ContractWorkersList";
 import { setupAxiosInterceptors } from "./axiosSetup";
 
 const App: React.FC = () => {

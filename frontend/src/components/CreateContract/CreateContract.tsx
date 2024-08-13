@@ -8,9 +8,9 @@ import {
   MenuItem,
   Button,
   Box,
-  Snackbar,
-  Alert,
 } from "@mui/material";
+import { AlertComponent } from "../common/AlertComponent";
+import { useAlerts } from "../hooks/useAlerts";
 
 const CreateContract: React.FC = () => {
   const [name, setName] = useState<string>("");
@@ -18,11 +18,7 @@ const CreateContract: React.FC = () => {
     "draft" | "approved" | "active" | "inactive"
   >("draft");
   const [ownerId, setOwnerId] = useState<number>(0);
-  const [openSnackbar, setOpenSnackbar] = useState<boolean>(false);
-  const [snackbarMessage, setSnackbarMessage] = useState<string>("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success"
-  );
+  const { alertState, setAlertState, closeAlert } = useAlerts();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -34,23 +30,23 @@ const CreateContract: React.FC = () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      setSnackbarMessage("Contract created successfully!");
-      setSnackbarSeverity("success");
+      setAlertState({
+        show: true,
+        message: "Contract created successfully!",
+        status: "success",
+      });
       setName("");
       setStatus("draft");
       setOwnerId(0);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Failed to create contract.";
-      setSnackbarMessage(errorMessage);
-      setSnackbarSeverity("error");
-    } finally {
-      setOpenSnackbar(true);
+      setAlertState({
+        show: true,
+        message: errorMessage,
+        status: "error",
+      });
     }
-  };
-
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
   };
 
   return (
@@ -66,11 +62,13 @@ const CreateContract: React.FC = () => {
         <TextField
           label="Name"
           value={name}
+          data-testid="create-contract-name"
           onChange={(e) => setName(e.target.value)}
           required
         />
         <Select
           label="Status"
+          data-testid="create-contract-status"
           value={status}
           onChange={(e) =>
             setStatus(
@@ -87,29 +85,22 @@ const CreateContract: React.FC = () => {
         <TextField
           label="Owner ID"
           type="number"
+          data-testid="create-contract-ownerId"
           value={ownerId}
           onChange={(e) => setOwnerId(Number(e.target.value))}
           required
         />
-        <Button variant="contained" color="primary" type="submit">
+        <Button
+          variant="contained"
+          color="primary"
+          type="submit"
+          data-testid="create-contract-btn"
+        >
           Create Contract
         </Button>
       </Box>
-
       {/* Snackbar for displaying messages */}
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbarSeverity}
-          sx={{ width: "100%" }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+      <AlertComponent {...alertState} closeAlert={closeAlert} />
     </Container>
   );
 };

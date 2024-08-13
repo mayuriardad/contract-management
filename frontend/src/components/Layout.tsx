@@ -12,7 +12,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const { user, isLoggedIn, logout } = useAuth();
 
-  console.log("user roleasss isLoggedIn", user, isLoggedIn);
   return (
     <div>
       {isLoggedIn && location.pathname !== "/" && (
