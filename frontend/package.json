@@ -1,6 +1,7 @@
 {
   "name": "frontend",
   "version": "1.0.0",
+  "homepage": ".",
   "description": "Frontend for A.inc Vendor Workers Management",
   "main": "src/index.tsx",
   "scripts": {

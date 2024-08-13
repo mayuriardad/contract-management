@@ -18,10 +18,14 @@ export const createContract = async (req: Request, res: Response) => {
       ServiceWorker
     ).findOneBy({
       employeeNumber: parseInt(ownerId),
-      role: "owner",
     });
 
     if (!workerTofind) {
+      return res.status(400).json({
+        message: "Worker id not found",
+      });
+    }
+    if (workerTofind.role === "worker") {
       return res.status(400).json({
         message: "Worker cannot be assigned as owner of a contract",
       });

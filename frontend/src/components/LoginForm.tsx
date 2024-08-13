@@ -13,7 +13,7 @@ const Login: React.FC = () => {
     event.preventDefault();
     try {
       await handleLogin(+employeeNumber);
-      navigate("/home"); // Redirect to home page after successful login
+      navigate("/workers"); // Redirect to home page after successful login
     } catch (error) {
       alert("Failed to login");
     }

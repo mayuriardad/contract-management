@@ -20,8 +20,7 @@ export const onboardWorker = async (req: Request, res: Response) => {
       employeeNumber: Number(employeeNumber),
     },
   });
-
-  if (mappingAlreadyExists) {
+  if (mappingAlreadyExists.length) {
     return res
       .status(409)
       .json({ message: "Worker already assigned to project" });
@@ -31,9 +30,16 @@ export const onboardWorker = async (req: Request, res: Response) => {
     const workerRepository = AppDataSource.getRepository(ServiceWorker);
 
     const worker = await workerRepository.findOneBy({ employeeNumber });
+    const contract = await AppDataSource.getRepository(
+      ServiceContract
+    ).findOneBy({ contractId });
 
     if (!worker) {
       return res.status(404).json({ message: "Worker not found" });
+    }
+
+    if (loggedInUser.employeeNumber !== contract?.ownerId) {
+      return res.status(403).json({ message: "Permission denied" });
     }
 
     const workerContractMappingRepository = AppDataSource.getRepository(
@@ -95,7 +101,7 @@ export const offboardWorker = async (req: Request, res: Response) => {
 export const getWorkersForContract = async (req: Request, res: Response) => {
   const loggedInUser = res.locals.user; // This is the user fetched in the middleware
 
-  if (!loggedInUser || ["worker", "owner"].includes(loggedInUser.role)) {
+  if (!loggedInUser || ["worker"].includes(loggedInUser.role)) {
     return res.status(403).json({ message: "Permission denied" });
   }
   const { contractId } = req.params;

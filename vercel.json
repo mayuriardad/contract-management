@@ -6,14 +6,14 @@
       "use": "@vercel/node",
       "config": {
         "includeFiles": ["backend/src/**/*.ts"],
-        "distDir": "backend/dist"
+        "distDir": "/backend/dist"
       }
     },
     {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "frontend/build"
+        "distDir": "/frontend/build"
       }
     }
   ],

@@ -17,13 +17,15 @@ import {
   TableBody,
 } from "@mui/material";
 import { useAuth } from "./contexts/AuthContext";
+import Home from "./Home";
 
 const HomePage: React.FC = () => {
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const { employeeNumber } = useAuth();
+  const { employeeNumber, user } = useAuth();
 
+  console.log(user, "user");
   useEffect(() => {
     if (employeeNumber) {
       const fetchContracts = async () => {
@@ -54,12 +56,17 @@ const HomePage: React.FC = () => {
   return (
     <Container maxWidth="md" sx={{ textAlign: "center", marginTop: 4 }}>
       {contracts.length === 0 ? (
-        <Typography>No contract assigned</Typography>
+        user?.role === "worker" ? (
+          <Typography>No contract assigned</Typography>
+        ) : (
+          <Home />
+        )
       ) : (
         <>
           <Typography variant="h4" gutterBottom>
             Your Assigned Contracts
           </Typography>
+
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
